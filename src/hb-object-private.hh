@@ -73,6 +73,14 @@ typedef long hb_atomic_int_t;
 #define hb_atomic_int_set(AI, V)	((void) _InterlockedExchange (&(AI), (V)))
 
 
+#elif defined(__GNUC__)
+
+typedef volatile int hb_atomic_int_t;
+#define hb_atomic_int_add(AI, V)            __sync_fetch_and_add(&(AI), (V))
+#define hb_atomic_int_get(AI)               (__sync_synchronize(), (AI))
+#define hb_atomic_int_set(AI, V)            __sync_lock_test_and_set(&(AI), (V))
+
+
 #else
 
 #warning "Could not find any system to define atomic_int macros, library will NOT be thread-safe"
