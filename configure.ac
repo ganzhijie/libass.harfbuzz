@@ -78,6 +78,7 @@ dnl ==========================================================================
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, have_glib=true, have_glib=false)
 if $have_glib; then
 	AC_DEFINE(HAVE_GLIB, 1, [Have glib2 library])
+	pkg_requires="glib-2.0 >= 2.16 ${pkg_requires}"
 fi
 AM_CONDITIONAL(HAVE_GLIB, $have_glib)
 
@@ -131,6 +132,7 @@ PKG_CHECK_MODULES(ICU, icu, have_icu=true, [
 ])
 if $have_icu; then
 	AC_DEFINE(HAVE_ICU, 1, [Have ICU library])
+	pkg_requires="icu ${pkg_requires}"
 fi
 AM_CONDITIONAL(HAVE_ICU, $have_icu)
 
@@ -139,6 +141,7 @@ dnl ==========================================================================
 PKG_CHECK_MODULES(GRAPHITE, graphite2, have_graphite=true, have_graphite=false)
 if $have_graphite; then
     AC_DEFINE(HAVE_GRAPHITE, 1, [Have Graphite library])
+	pkg_requires="graphite2 ${pkg_requires}"
 fi
 AM_CONDITIONAL(HAVE_GRAPHITE, $have_graphite)
 
@@ -154,6 +157,7 @@ if $have_freetype; then
 	AC_CHECK_FUNCS(FT_Face_GetCharVariantIndex)
 	LIBS="$_save_libs"
 	CFLAGS="$_save_cflags"
+	pkg_requires="freetype2 >= 2.3.8 ${pkg_requires}"
 fi
 AM_CONDITIONAL(HAVE_FREETYPE, $have_freetype)
 
@@ -176,6 +180,8 @@ if $have_uniscribe; then
 	AC_DEFINE(HAVE_UNISCRIBE, 1, [Have Uniscribe backend])
 fi
 AM_CONDITIONAL(HAVE_UNISCRIBE, $have_uniscribe)
+
+AC_SUBST([PKG_REQUIRES], ${pkg_requires})
 
 AC_CONFIG_FILES([
 Makefile

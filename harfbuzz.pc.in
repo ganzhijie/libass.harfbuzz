@@ -7,5 +7,6 @@ Name: harfbuzz
 Description: Text shaping library
 Version: @VERSION@
 
+Requires: @PKG_REQUIRES@
 Libs: -L${libdir} -lharfbuzz
 Cflags: -I${includedir}/harfbuzz
