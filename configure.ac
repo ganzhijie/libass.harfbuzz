@@ -73,27 +73,40 @@ if test "x$GCC" = "xyes"; then
 	esac
 fi
 
+AC_ARG_ENABLE([uniscribe], AS_HELP_STRING([--enable-uniscribe],
+    [enable uniscribe backend @<:@default=no@:>@]))
+AC_ARG_ENABLE([glib], AS_HELP_STRING([--disable-glib],
+    [disable glib unicode support @<:@default=check@:>@]))
+AC_ARG_ENABLE([icu], AS_HELP_STRING([--disable-icu],
+    [disable ICU unicode support @<:@default=check@:>@]))
+
 dnl ==========================================================================
 
-PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, have_glib=true, have_glib=false)
-if $have_glib; then
-	AC_DEFINE(HAVE_GLIB, 1, [Have glib2 library])
-	pkg_requires="glib-2.0 >= 2.16 ${pkg_requires}"
+have_glib=false
+have_gthread=false
+have_gobject=false
+if test x$enable_glib != xno; then
+    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, have_glib=true, have_glib=false)
+    if $have_glib; then
+        AC_DEFINE(HAVE_GLIB, 1, [Have glib2 library])
+        pkg_requires="glib-2.0 >= 2.16 ${pkg_requires}"
+    fi
+
+    PKG_CHECK_MODULES(GTHREAD, gthread-2.0, have_gthread=true, have_gthread=false)
+    if $have_gthread; then
+        AC_DEFINE(HAVE_GTHREAD, 1, [Have gthread2 library])
+    fi
+
+    PKG_CHECK_MODULES(GOBJECT, gobject-2.0, have_gobject=true, have_gobject=false)
+    if $have_gobject; then
+        AC_DEFINE(HAVE_GOBJECT, 1, [Have gobject2 library])
+        GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
+        AC_SUBST(GLIB_MKENUMS)
+    fi
 fi
+
 AM_CONDITIONAL(HAVE_GLIB, $have_glib)
-
-PKG_CHECK_MODULES(GTHREAD, gthread-2.0, have_gthread=true, have_gthread=false)
-if $have_gthread; then
-	AC_DEFINE(HAVE_GTHREAD, 1, [Have gthread2 library])
-fi
 AM_CONDITIONAL(HAVE_GTHREAD, $have_gthread)
-
-PKG_CHECK_MODULES(GOBJECT, gobject-2.0, have_gobject=true, have_gobject=false)
-if $have_gobject; then
-	AC_DEFINE(HAVE_GOBJECT, 1, [Have gobject2 library])
-	GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
-	AC_SUBST(GLIB_MKENUMS)
-fi
 AM_CONDITIONAL(HAVE_GOBJECT, $have_gobject)
 
 dnl ==========================================================================
@@ -112,28 +125,33 @@ AM_CONDITIONAL(HAVE_CAIRO_FT, $have_cairo_ft)
 
 dnl ==========================================================================
 
-PKG_CHECK_MODULES(ICU, icu-uc, have_icu=true, [
-	have_icu=true
-	AC_CHECK_HEADERS(unicode/uchar.h,, have_icu=false)
-	AC_MSG_CHECKING([for libicuuc])
-	LIBS_old=$LIBS
-	LIBS="$LIBS -licuuc"
-	AC_TRY_LINK([#include <unicode/uchar.h>],
-		    [u_getIntPropertyValue (0, (UProperty)0);],
-		    AC_MSG_RESULT(yes),
-		    AC_MSG_RESULT(no);have_icu=false)
-	LIBS=$LIBS_old
-	if $have_icu; then
-		ICU_CFLAGS=-D_REENTRANT
-		ICU_LIBS="-licuuc"
-		AC_SUBST(ICU_CFLAGS)
-		AC_SUBST(ICU_LIBS)
-	fi
-])
+have_icu=false
+if test x$enable_icu != xno; then
+    PKG_CHECK_MODULES(ICU, icu-uc, have_icu=true, [
+        have_icu=true
+        AC_CHECK_HEADERS(unicode/uchar.h,, have_icu=false)
+        AC_MSG_CHECKING([for libicuuc])
+        LIBS_old=$LIBS
+        LIBS="$LIBS -licuuc"
+        AC_TRY_LINK([#include <unicode/uchar.h>],
+                [u_getIntPropertyValue (0, (UProperty)0);],
+                AC_MSG_RESULT(yes),
+                AC_MSG_RESULT(no);have_icu=false)
+        LIBS=$LIBS_old
+        if $have_icu; then
+            ICU_CFLAGS=-D_REENTRANT
+            ICU_LIBS="-licuuc"
+            AC_SUBST(ICU_CFLAGS)
+            AC_SUBST(ICU_LIBS)
+        fi
+    ])
+fi
+
 if $have_icu; then
 	AC_DEFINE(HAVE_ICU, 1, [Have ICU library])
 	pkg_requires="icu ${pkg_requires}"
 fi
+
 AM_CONDITIONAL(HAVE_ICU, $have_icu)
 
 dnl ==========================================================================
@@ -171,13 +189,16 @@ AM_CONDITIONAL(HAVE_OT, $have_ot)
 
 dnl ===========================================================================
 
-AC_CHECK_HEADERS(usp10.h windows.h, have_uniscribe=true, have_uniscribe=false)
-if $have_uniscribe; then
-	UNISCRIBE_CFLAGS=
-	UNISCRIBE_LIBS="-lusp10 -lgdi32"
-	AC_SUBST(UNISCRIBE_CFLAGS)
-	AC_SUBST(UNISCRIBE_LIBS)
-	AC_DEFINE(HAVE_UNISCRIBE, 1, [Have Uniscribe backend])
+have_uniscribe=false
+if test x$enable_uniscribe = xyes; then
+    AC_CHECK_HEADERS(usp10.h windowsx.h, have_uniscribe=true, have_uniscribe=false)
+	if $have_uniscribe; then
+		UNISCRIBE_CFLAGS=
+		UNISCRIBE_LIBS="-lusp10 -lgdi32"
+		AC_SUBST(UNISCRIBE_CFLAGS)
+		AC_SUBST(UNISCRIBE_LIBS)
+		AC_DEFINE(HAVE_UNISCRIBE, 1, [Have Uniscribe backend])
+		fi
 fi
 AM_CONDITIONAL(HAVE_UNISCRIBE, $have_uniscribe)
 
