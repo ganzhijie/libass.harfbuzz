@@ -112,7 +112,7 @@ AM_CONDITIONAL(HAVE_CAIRO_FT, $have_cairo_ft)
 
 dnl ==========================================================================
 
-PKG_CHECK_MODULES(ICU, icu, have_icu=true, [
+PKG_CHECK_MODULES(ICU, icu-uc, have_icu=true, [
 	have_icu=true
 	AC_CHECK_HEADERS(unicode/uchar.h,, have_icu=false)
 	AC_MSG_CHECKING([for libicuuc])
